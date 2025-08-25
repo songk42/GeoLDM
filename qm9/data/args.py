@@ -245,11 +245,11 @@ class BoolArg(argparse.Action):
 def _arg_to_bool(arg):
     # Convert argument to boolean
 
-    if type(arg) is bool:
+    if type(arg) == bool:
         # If argument is bool, just return it
         return arg
 
-    elif type(arg) is str:
+    elif type(arg) == str:
         # If string, convert to true/false
         arg = arg.lower()
         if arg in ['true', 't', '1']:

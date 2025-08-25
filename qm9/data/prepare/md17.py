@@ -70,7 +70,7 @@ def download_dataset_md17(datadir, dataname, subset, splits=None, cleanup=True):
     # Process GDB9 dataset, and return dictionary of splits
     md17_data_split = {}
     for split, split_idx in splits.items():
-        md17_data_split[split] = {key: val[split_idx] if type(val) is np.ndarray else val for key, val in md17_data.items()}
+        md17_data_split[split] = {key: val[split_idx] if type(val) == np.ndarray else val for key, val in md17_data.items()}
 
     # Save processed GDB9 data into train/validation/test splits
     logging.info('Saving processed data:')
