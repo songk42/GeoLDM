@@ -18,6 +18,7 @@ from qm9.analyze import check_stability
 from os.path import join
 from qm9.sampling import sample_chain, sample
 from configs.datasets_config import get_dataset_info
+import tqdm
 
 
 def check_mask_correct(variables, node_mask):
@@ -70,7 +71,10 @@ def sample_only_stable_different_sizes_and_save(
         nodesxsample=nodesxsample)
 
     counter = 0
-    for i in range(n_tries):
+    import time
+    tot_time = 0
+    for i in tqdm.tqdm(range(n_tries)):
+        start_time = time.time()
         num_atoms = int(node_mask[i:i+1].sum().item())
         atom_type = one_hot[i:i+1, :num_atoms].argmax(2).squeeze(0).cpu().detach().numpy()
         x_squeeze = x[i:i+1, :num_atoms].squeeze(0).cpu().detach().numpy()
@@ -81,6 +85,7 @@ def sample_only_stable_different_sizes_and_save(
 
         if mol_stable or num_remaining_attempts <= num_remaining_samples:
             if mol_stable:
+                tot_time += time.time() - start_time
                 print('Found stable mol.')
             vis.save_xyz_file(
                 join(eval_args.model_path, 'eval/molecules/'),
@@ -92,6 +97,7 @@ def sample_only_stable_different_sizes_and_save(
 
             if counter >= n_samples:
                 break
+    print(f"Took {tot_time} seconds to sample {counter} stable molecules.")
 
 
 def main():
@@ -139,25 +145,25 @@ def main():
 
     flow.load_state_dict(flow_state_dict)
 
-    print('Sampling handful of molecules.')
-    sample_different_sizes_and_save(
-        args, eval_args, device, flow, nodes_dist,
-        dataset_info=dataset_info, n_samples=30)
+    # print('Sampling handful of molecules.')
+    # sample_different_sizes_and_save(
+    #     args, eval_args, device, flow, nodes_dist,
+    #     dataset_info=dataset_info, n_samples=30)
 
     print('Sampling stable molecules.')
     sample_only_stable_different_sizes_and_save(
         args, eval_args, device, flow, nodes_dist,
-        dataset_info=dataset_info, n_samples=10, n_tries=2*10)
-    print('Visualizing molecules.')
-    vis.visualize(
-        join(eval_args.model_path, 'eval/molecules/'), dataset_info,
-        max_num=100, spheres_3d=True)
+        dataset_info=dataset_info, n_samples=10000, n_tries=12000)
+    # print('Visualizing molecules.')
+    # vis.visualize(
+    #     join(eval_args.model_path, 'eval/molecules/'), dataset_info,
+    #     max_num=100, spheres_3d=True)
 
-    print('Sampling visualization chain.')
-    save_and_sample_chain(
-        args, eval_args, device, flow,
-        n_tries=eval_args.n_tries, n_nodes=eval_args.n_nodes,
-        dataset_info=dataset_info)
+    # print('Sampling visualization chain.')
+    # save_and_sample_chain(
+    #     args, eval_args, device, flow,
+    #     n_tries=eval_args.n_tries, n_nodes=eval_args.n_nodes,
+    #     dataset_info=dataset_info)
 
 
 if __name__ == "__main__":
